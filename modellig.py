@@ -81,7 +81,7 @@ def simulate(anim=False):
     I = 0.006 # kg m²
     g = 9.8 # m/s²
 
-    K, E = lqr_control(Q=np.identity(4), R=np.array([[100]]))
+    K, E = lqr_control(Q=np.diag([1000, 1, 100, 1]), R=np.array([[100]]))
     x_ref = np.array([0.0, 0.0, np.pi, 0.0])
     
     par = M, m, l, I, g, b
@@ -91,17 +91,35 @@ def simulate(anim=False):
     t_end = 10
     t = np.linspace(t_start, t_end, 301)
 
-
     sol = odeint(pendulum, var0, t, args=(K.flatten(), x_ref, par))
+
+    u_history = []
+    for i in range(len(t)):
+        state = sol[i]
+        state_error = state - x_ref
+        u = -np.dot(K, state_error)
+        u_history.append(u)
+    u_history = np.array(u_history)
+
+    plt.figure(1)
+    plt.plot(t, u_history, 'r', label='Força u(t)')
+    plt.xlabel('Tempo (s)')
+    plt.ylabel('Força (N)')
+    plt.title('Força Aplicada no Carrinho')
+    plt.grid()
+    plt.legend()
+    plt.show()
+    plt.close()
     
     if not anim:
-        plt.plot(t, sol[:, 0], 'b', label='x(t)')
+        plt.figure(2)
+        plt.plot(t, sol[:, 0], 'b', label='x(t)')   
         plt.plot(t, sol[:, 2], 'g', label='theta(t)')
         plt.legend(loc='best')
         plt.show()
     else:
         x, theta = sol[:, 0], sol[:, 2]
-        fig = plt.figure()
+        fig = plt.figure(3)
         lim = 1
         ax = fig.add_subplot(autoscale_on=False, xlim=(-lim, lim), ylim=(-lim, lim))
         ax.set_aspect('equal')
@@ -127,7 +145,8 @@ def simulate(anim=False):
                                       interval=interval, blit=True)
         
         plt.show()
-        ani.save('pendulum.gif', writter='pillow', fps=30)
+        ani.save('pendulum.gif', writer='pillow', fps=30)
+        
 
 # conclusão não é estável
 def open_loop_stability():
@@ -213,5 +232,3 @@ def lqr_root_locus():
     plt.grid(True)
     plt.legend()
     plt.show()
-
-simulate(anim=True)

@@ -1,0 +1,9 @@
+
+from numpy import sin, cos, tan
+
+def pendulum(var, t, U, par):
+    M, m, l, I, g, b = par
+    x, x_dot, theta, theta_dot = var
+    u = U(t, var)
+    @@
+    return [dx, dx_dot, dtheta, dtheta_dot]

@@ -232,3 +232,13 @@ def lqr_root_locus():
     plt.grid(True)
     plt.legend()
     plt.show()
+
+def kalam_filter():
+    A, B, C, D = linearize_pendulum([0.0, 0.0, np.pi, 0.0])
+
+    Vd = .1*np.eye(4) # Disturbio covariance
+    Vn = 1 # Ruido covariance
+
+    BF = [B, Vd, 0*B]
+
+    sysC = clt.ss()

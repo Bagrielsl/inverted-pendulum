@@ -162,3 +162,21 @@ def compare_nonlinear_linear(point=[0.0, 0.0, np.pi, 0.0]):
     plt.show()
     
 #compare_nonlinear_linear(point=[0.0, 0.0, np.pi*0.98, 0.0])
+
+# Pendulum with Friction in the rod
+# This model dont modeling the car equations just accpet the input u as a speed const speed times [0, 1, -1]
+# and the friction is in the rod.
+def generate_equations_pendulum_friction():
+    # parameters
+    M, m, I, l, g, b = symbols('M m I l g b')
+    # inputs 
+    u, D = symbols('u D')
+    # states
+    theta, x, dtheta, dx = symbols('theta x theta_dot x_dot')
+    ddx, ddtheta = symbols('ddx ddθ')
+    eq1 = (M+m)*ddx + b*dx + m*l*ddtheta*sp.cos(theta)-m*l*dtheta**2*sp.sin(theta)-u
+    eq2 = (I+m*l**2)*ddtheta+m*g*l*sp.sin(theta) + m*l*ddx*sp.cos(theta) - b*l*dtheta
+    sol = solve((eq1, eq2), (ddx, ddtheta))
+    f1 = sp.simplify(sol[ddx])
+    f2 = sp.simplify(sol[ddtheta])
+    return f1, f2

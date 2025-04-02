@@ -95,4 +95,31 @@ def show_test_soltar_out():
     plt.legend()
     plt.title('Pendulum Calibration Data')
     plt.show()
-show_test_soltar_out()
+#show_test_soltar_out()
+
+def raw_pitch():
+    code = None
+    with open('data/test_soltar.txt', 'r') as file:
+        code = file.read()
+    p = []
+    r = []
+    for line in code.split('\n')[1:]:
+        sline = line.split()
+        try:
+            r.append(float(sline[3]))
+            p.append(float(sline[5]))
+        except:
+            print('error:',line)
+    
+    p = np.array(p)
+    r = np.array(r)
+    for i in range(len(p)):
+        if r[i] < 0:
+            p[i] = -p[i] + 180
+    plt.plot(p)
+    plt.plot(r)
+    plt.xlabel('Time (s)')
+    plt.ylabel('Theta (rad)')
+    plt.title('Pendulum Calibration Data')
+    plt.show()
+raw_pitch()

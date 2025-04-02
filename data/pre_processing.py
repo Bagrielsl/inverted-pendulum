@@ -78,6 +78,5 @@ def test_empurrar():
     data['t'] = (data['t'] - data['t'].iloc[0]) / 1000
     data.to_csv('test_2.csv', index=False)
     print('wrote test_2.csv')
-
 test_soltar()
 test_empurrar()

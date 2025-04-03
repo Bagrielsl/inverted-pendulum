@@ -241,4 +241,11 @@ def kalam_filter():
 
     BF = [B, Vd, 0*B]
 
-    sysC = clt.ss()
+    sysC = clt.ss(A, BF, C, [0, 0, 0, 0, 0, Vn])
+
+print(linearize_pendulum([0.0, 0.0, np.pi, 0.0]))
+
+Kf = np.array([[0.85583616, 0.31622777, 0.0, 0.0],
+  [0.0, 0.0, 23.01547298, 264.8059983]])
+
+A, B, C, D = linearize_pendulum([0.0, 0.0, np.pi, 0.0])

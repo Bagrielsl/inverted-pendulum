@@ -1,12 +1,12 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from modelling import linearize_pendulum, simulate, simulate_u
+from modelling import linearize_pendulum_friction, simulate, simulate_u, simulate_friction
 import control as clt
 
 
 # conclusão não é estável
 def open_loop_stability():
-    A, B, C, D = linearize_pendulum([0.0, 0.0, np.pi, 0.0])
+    A, B, C, D = linearize_pendulum_friction([0.0, 0.0, np.pi, 0.0])
     sys = clt.ss(A, B, C, D)
     poles = clt.poles(sys)
     max_img = max([abs(p.imag) for p in poles])
@@ -21,10 +21,10 @@ def open_loop_stability():
 ############
 
 def system_lqr():
-    A, B, C, D = linearize_pendulum([0.0, 0.0, np.pi, 0.0])
+    A, B, C, D = linearize_pendulum_friction([0.0, 0.0, np.pi, 0.0])
     Q = np.eye(4)
     Q[0, 0] = 10
-    R = 1000*np.eye(1)
+    R = np.eye(1)
     K, _, _ = clt.lqr(A, B, Q, R)
     K = K[0]
     print(f'[{K[0]}, {K[1]}, {K[2]}, {K[3]}]')
@@ -35,22 +35,33 @@ def simulate_lqr():
     def u(t, x):
         error = x - [0.0, 0.0, np.pi, 0.0]
         return -np.dot(K, error)
-    var0 = [0.0, 0.0, np.pi -0.2, 0.0]
-    simulate(anim=True, u=u, var0=var0, lim=1, save=False)
-    simulate_u(u, var0, save=False)
-simulate_lqr()
+    var0 = [0.0, 0.0, np.pi -0.3, 0.0]
+    simulate_friction(anim=True, u=u, var0=var0, lim=1, save=False)
+    simulate_friction(u=u, var0=var0, save=False)
+#simulate_lqr()
+
+
+def kalman():
+    A, B, C, D = linearize_pendulum_friction([0.0, 0.0, np.pi, 0.0])
+    ss = clt.ss(A, B, C, D)
+    #print(ss.A, ss.B, ss.C, ss.D, sep='\n')
+    Vd = 0.1*np.eye(4)
+    Vn = np.eye(2)
+    K, _, _ = clt.lqr(ss.A.T, ss.C.T, Vd, Vn)
+    print(K)
+kalman()
 
 def double_lqr():
     Q = np.eye(4)
     Q[0, 0] = 10
     R = 100*np.eye(1)
     
-    A, B, C, D = linearize_pendulum([0.0, 0.0, np.pi, 0.0])
+    A, B, C, D = linearize_pendulum_friction([0.0, 0.0, np.pi, 0.0])
     K, _, _ = clt.lqr(A, B, Q, R)
     K1 = K[0]
     
     R = 0.01*np.eye(1)
-    A, B, C, D = linearize_pendulum([0.0, 0.0, 0.0, 0.0])
+    A, B, C, D = linearize_pendulum_friction([0.0, 0.0, 0.0, 0.0])
     K, _, _ = clt.lqr(A, B, Q, R)
     K2 = K[0]
     return K1, K2
@@ -76,7 +87,7 @@ def simulate_double_lqr():
 
 # transfer function
 def system_tf():
-    A, B, C, D = linearize_pendulum([0.0, 0.0, np.pi, 0.0])
+    A, B, C, D = linearize_pendulum_friction([0.0, 0.0, np.pi, 0.0])
     tf = clt.ss2tf(A, B, C, D)
     num1, num2 = tf.num
     den1, den2 = tf.den

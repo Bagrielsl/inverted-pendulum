@@ -1,4 +1,4 @@
-from models.pendulum import pendulum
+from models.pendulum_friction import pendulum_friction
 import numpy as np
 import pandas as pd
 from scipy.optimize import minimize
@@ -9,52 +9,47 @@ def calibrate_pendulum():
     data_t = data['t']
     data_theta = data['p']/ 180 * np.pi
     
+    c = -0.0035 # N/rad/s
+    g = 9.78 # m/s²
+    m = 0.075 # kg
     def cost_function(x):
-        b, I, l, M = x
+        l, I = x
         # Unpack parameters
         #M = 0.266 # kg
-        m = 0.075 # kg
         #b = 0.1 # N/m/s
-        #l = 0.29 # m
+        #l = 0.087 # m
         #I = 0.006 # kg m²
-        g = 9.78 # m/s²
-        par = M, m, l, I, g, b
+        par = m, l, I, g, c
         
         # Initialize pendulum model
         var0 = [0.0, 0.0, data_theta[0], 0.0]
         
         # Simulate pendulum
-        sol = odeint(pendulum, var0, data_t, args=(lambda t, x: 0.0, par))
+        sol = odeint(pendulum_friction, var0, data_t, args=(lambda t, x: 0.0, par))
         
         # Calculate cost function
         return np.mean((np.abs(sol[:, 2]) - data_theta)**2)
     
     # Initial guess for b and I
-    b_init = 0.1
-    I_init = 0.006
-    l_init = 0.12
-    M_init = 10#0.266
-    init = np.array([b_init, I_init, l_init, M_init])
+    l_init = 0.07
+    I_init = 0.000001
+    init = np.array([ l_init, I_init])
     # Bounds for b and I
-    b_bounds = (0.0, 100.0)
-    I_bounds = (0.0, 1.0)
-    l_bounds = (0.0, 0.15)
-    M_bounds = (0.01,100.0)#(0.001, 100.0)
-    bounds = [b_bounds, I_bounds, l_bounds, M_bounds]
+    l_bounds = (0.01, 0.3)
+    I_bounds = (0.0, 0.01)
+    bounds = [l_bounds, I_bounds]
     # Optimize cost function
     result = minimize(cost_function, init, bounds=bounds, method='BFGS')
-    b_opt, I_opt, l_opt, M_opt = result.x
+    l_opt, I_opt = result.x
     
     # Print results
-    print(f"Optimal b: {b_opt}")
+    print(f"Optimal b: {l_opt}")
     print(f"Optimal I: {I_opt}")
-    print(f"Optimal l: {l_opt}")
-    print(f"Optimal M: {M_opt}")
     print(f"Cost function value: {result.fun}")
     # Simulate with optimal parameters
     var0 = [0.0, 0.0, data_theta[0], 0.0]
-    par = M_opt, 0.075, l_opt, I_opt, 9.78, b_opt
-    sol = odeint(pendulum, var0, data_t, args=(lambda t, x: 0.0, par))
+    par = m, l_opt, I_opt, g, c
+    sol = odeint(pendulum_friction, var0, data_t, args=(lambda t, x: 0.0, par))
     # Plot results
     plt.plot(data_t, data_theta, 'r--', label='Data')
     plt.plot(data_t, np.abs(sol[:, 2]), 'b', label='Model')
@@ -122,4 +117,34 @@ def raw_pitch():
     plt.ylabel('Theta (rad)')
     plt.title('Pendulum Calibration Data')
     plt.show()
-raw_pitch()
+#raw_pitch()
+
+
+def simul_test():
+    
+    data = pd.read_csv('data/test_1.csv')
+    data_t = data['t']
+    data_theta = data['p']/ 180 * np.pi
+    # Simulate with optimal parameters
+    var0 = [0.0, 0.0, data_theta[0], 0.0]
+    
+    # Unpack parameters
+    m = 0.075 # kg
+    l = 0.07 # m
+    I = 0.000001 # kg m²
+    g = 9.78 # m/s²
+    c = -0.0035 # N/rad/s
+    par = m, l, I, g, c
+    
+    
+    sol = odeint(pendulum_friction, var0, data_t, args=(lambda t, x: 0.0, par))
+    # Plot results
+    plt.plot(data_t, data_theta, 'r--', label='Data')
+    plt.plot(data_t, np.abs(sol[:, 2]), 'b', label='Model')
+    plt.xlabel('Time (s)')
+    plt.ylabel('Theta (rad)')
+    plt.legend()
+    plt.title('Pendulum Calibration')
+    plt.show()
+    
+simul_test()

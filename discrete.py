@@ -70,7 +70,7 @@ def simulate_lqr_discrete():
     t = np.arange(t_start, t_end, Ts)
     n_steps = len(t)
     
-    var0 = np.array([0.0, 0.0, np.pi - 0.2, 0.0])
+    var0 = np.array([0.0, 0.0, np.pi-1, 0.0])
     x_ref = np.array([0.0, 0.0, np.pi, 0.0])
     
     x_history = np.zeros((4, n_steps))

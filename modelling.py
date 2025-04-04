@@ -132,7 +132,7 @@ def linearize_pendulum_friction(vars_val, par_val = [0.075, 0.07, 0.000001, 9.78
         B[i, 0] = B[i, 0].subs(list(zip(par, par_val)))
         B[i, 0] = B[i, 0].subs(list(zip(vars, vars_val)))
         B[i, 0] = B[i, 0].subs(u, 0.0)
-    C = np.array([[1, 0, 0, 0], [0, 0, 1, 0]])
+    C = np.array([[0, 1, 0, 0], [0, 0, 1, 0]])
     D = np.zeros((2, 1))
     return A.astype('float'), B.astype('float'), C, D
     

@@ -49,7 +49,7 @@ def kalman():
     Vn = np.eye(2)
     K, _, _ = clt.lqr(ss.A.T, ss.C.T, Vd, Vn)
     print(K)
-kalman()
+#kalman()
 
 def double_lqr():
     Q = np.eye(4)
@@ -95,7 +95,21 @@ def system_tf():
     thetau = clt.tf(num2[0], den2[0])
     return xu, thetau
 
+A, B = system_tf()
+print(A.poles())
+print(B.poles())
 
+def Kp_inner_loop():
+    xu, _ = system_tf()
+    ks = np.linspace(0, 10, 1000)
+    s = clt.TransferFunction.s
+    ys = []
+    for k in ks:
+        sys = clt.feedback(kp*xu + ki/s + k*s)
+        T, y = clt.step_response(sys)
+        ys.append(y[-1])
+    my = np.argmin(np.abs(ys))
+    print('Kd = ', ks[my], 'y = ', ys[my])
 
 
 def Ki_inner_loop():
@@ -134,3 +148,68 @@ def Kd_inner_loop():
 #Kd_inner_loop()
 
 # simulate(anim=True)
+
+def Kp_inner_loop_thetau():
+    _, thetau = system_tf()
+    kp = np.linspace(-100, 100, 1000)
+    s = clt.TransferFunction.s
+    ys = []
+    for k in kp:
+        sys = clt.feedback(k*thetau)
+        T, y = clt.step_response(sys)
+        ys.append(y[-1])
+    my = np.argmin(np.abs(ys))
+    print(sys.poles())
+    print('Kp = ', kp[my], 'y = ', ys[my])
+    return kp[my]
+Kp_inner_loop_thetau()
+
+def Ki_inner_loop_thetau():
+    xu, thetau = system_tf()
+    kp = Kp_inner_loop_thetau()
+    ks = np.linspace(-100, 100, 1000)
+    s = clt.TransferFunction.s
+    ys = []
+    for k in ks:
+        controller = kp + (k/s)
+        sys_open = controller * thetau
+        sys = clt.feedback(sys_open, 1)
+        T, y = clt.step_response(sys)
+        ys.append(y[-1])
+    my = np.nanargmin(np.abs(ys))
+    print('Ki = ', ks[my], 'y = ', ys[my], my)
+    plt.plot(ks, ys)
+    plt.show()
+    return ks[my]
+
+def Kpi_inner_loop_thetau():
+    xu, thetau = system_tf()
+    kp = Kp_inner_loop_thetau()
+    ks = np.linspace(-100, 100, 1000)
+    s = clt.TransferFunction.s
+    ys = []
+    for k in ks:
+        sys = clt.feedback((kp + (k/s))*thetau)
+        T, y = clt.step_response(sys)
+        ys.append(y[-1])
+    my = np.nanargmin(np.abs(ys))
+    print('Ki = ', ks[my], 'y = ', ys[my], my)
+    #plt.plot(ks, ys)
+    #plt.show()
+    return kp, ks[my]
+
+def Kd_inner_loop_thetau():
+    _, thetau = system_tf()
+    kp, ki = Kpi_inner_loop_thetau()
+    kd = np.linspace(0, 10, 1000)
+    s = clt.TransferFunction.s
+    ys = []
+    for k in kd:
+        sys = clt.feedback((kp + ki/s + k*s)*thetau)
+        T, y = clt.step_response(sys)
+        ys.append(y[-1])
+    my = np.argmin(np.abs(ys))
+    print('Kd = ', kd[my], 'y = ', ys[my])
+    return kd[my]
+
+#Kd_inner_loop_thetau()
